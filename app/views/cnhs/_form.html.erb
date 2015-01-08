@@ -1,0 +1,46 @@
+<%= form_for [@customer, @cnh] do |f| %>
+  <% if @cnh.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@cnh.errors.count, "error") %> prohibited this cnh from being saved:</h2>
+
+      <ul>
+      <% @cnh.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= f.hidden_field :customer_id %>
+
+  <div class="field">
+    <%= f.label :category %><br>
+    <%= f.text_field :category %>
+  </div>
+  <div class="field">
+    <%= f.label :registration %><br>
+    <%= f.text_field :registration %>
+  </div>
+  <div class="field">
+    <%= f.label :first %><br>
+    <%= f.check_box :first %>
+  </div>
+  <div class="field">
+    <%= f.label :first_registration %><br>
+    <%= f.date_select(:first_registration, :start_year => Time.new.year - 62, :end_year => Time.new.year - 17) %>
+  </div>  
+  <div class="field">
+    <%= f.label :validity %><br>
+    <%= f.date_select :validity %>
+  </div>
+  <div class="field">
+    <%= f.label :photo %><br>
+	<% if @cnh.photo.present? %>
+		<img src='/uploads/<%= @cnh.photo.path %>' style='max-width: 135px; padding-bottom: 15px' />
+	<% end %>    
+    <%= f.file_field :file %>
+  </div>  
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+<% end %>

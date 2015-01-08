@@ -1,0 +1,40 @@
+<h1>Listando CNH</h1>
+
+<h2><%= @customer.name %></h2>
+<table class="table">
+	<thead>
+		<tr>
+			<th></th>
+			<th>Category</th>
+			<th>Registration</th>
+			<th>Primeira habitação</th>
+			<th>Validity</th>
+			<th></th>
+			<th></th>
+			<th></th>
+		</tr>
+	</thead>
+
+	<tbody>
+		<% @cnhs.each do |cnh| %>
+		<tr>
+			<td>
+				<% if cnh.photo.present? %>
+					<img src='/uploads/<%= cnh.photo.path %>' style='max-width: 75px' />
+				<% end %>
+			</td>
+			<td><%= cnh.category %></td>
+			<td><%= cnh.registration %></td>
+			<td><%= "Sim / " if cnh.first %> <%= I18n.l(cnh.first_registration) if cnh.first_registration.present?  %></td>
+			<td><%= I18n.l cnh.validity %></td>
+			<td><%= link_to I18n.t('links.show'), customer_cnh_path(@customer, cnh) %></td>
+			<td><%= link_to I18n.t('links.edit'), edit_customer_cnh_path(@customer, cnh) %></td>
+			<td><%= link_to I18n.t('links.destroy'), customer_cnh_path(@customer, cnh), method: :delete, data: { confirm: 'Are you sure?' } %></td>
+		</tr>
+		<% end %>
+	</tbody>
+</table>
+
+<br>
+<%= link_to I18n.t('links.back'), customers_path %>
+<%= link_to 'Nova CNH', new_customer_cnh_path(@customer) %>

@@ -1,0 +1,2 @@
+module CnhsHelper
+end

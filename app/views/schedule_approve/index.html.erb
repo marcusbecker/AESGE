@@ -1,0 +1,115 @@
+<script>
+	function update(_id, _app) {
+		if (_app) {
+			if(!confirm('Aprovar aula?')){
+				return;
+			}				
+			$.ajax({
+				type : "PUT",
+				url : "/schedule_approve/approve/" + _id,
+				dataType : 'json',
+				data : {}
+			}).done(function(msg) {
+				window.location.replace("/schedule_approve/index");
+			});
+		}
+	}
+</script>
+
+<h1>Listing schedules</h1>
+
+
+<%= form_tag schedule_approve_index_path, :method => 'get', :id => 'filter_schedule' do |f|	%>
+		<p>
+			<span>Aprovar aulas na data:</span>
+			<%= text_field_tag :date_init, I18n.l(@schedule.date_init), :id => 'sel_date_ini', :class => 'input-small'  %>
+		</p>
+<% end %>
+
+<%= form_tag('/schedule_approve/', method: :put, id: :f_approve) do |f| %>
+<%= hidden_field_tag :description %>
+<% end %>
+
+<table class="table">
+	<thead>
+		<tr>
+			<th>Date</th>
+			<th>Time</th>
+			<th>Vehicles</th>
+			<th>Instructor</th>
+			<th>Customer</th>
+			<th></th>
+		</tr>
+	</thead>
+
+	<tbody>
+		<% @schedules.each do |schedule| %>
+		<tr>
+			<td><%= I18n.l schedule.date  %></td>
+			<td><%= I18n.l schedule.time, :format => :short_custom  %></td>
+			<td><%= schedule.vehicle.name%></td>
+			<td><%= schedule.instructor.name %></td>
+			<td><%= schedule.customer.name %></td>
+			<td> 
+				<% if schedule.complete.nil? %> 
+					<a href="javascript:void(0)" onclick="update(<%= schedule.id %>, true);">Aprovar</a>
+					<a href="#" data-toggle="modal" data-id="<%= schedule.id %>" data-target="#reproveModal">Reprovar</a> 
+				<% else %>
+					<% if schedule.complete %>
+						<span>Aprovado</span> 
+					<%else%>
+						<span>Reprovado <a href="#" title="<%= schedule.description %>">?</a></span> 
+					<% end %>
+				<% end %> 
+			</td>
+		</tr>
+		<% end %>
+
+		<div class="modal fade" id="reproveModal">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">
+							<span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+						</button>
+						<h4 class="modal-title">Cancelamento da aula:</h4>
+					</div>
+					<div class="modal-body">
+						<p>
+							Motivo do cancelamento:
+						</p>
+						<input id="modal_id" name="modal_id" type="hidden">
+						<textarea name="motivo" id="motivo" style="width: 550px"></textarea>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">
+							Fechar
+						</button>
+						<button type="button" id="sendReprove" class="btn btn-primary">
+							Salvar
+						</button>
+					</div>
+				</div><!-- /.modal-content -->
+			</div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+		<script>
+			$('#reproveModal').on('show.bs.modal', function(e) {
+				var id = $(e.relatedTarget).attr('data-id');
+				$("#modal_id").val(id);
+			});
+			$("#sendReprove").click(function() {
+				var id = $("#modal_id").val();
+				$('#f_approve').attr('action', '/schedule_approve/reprove/' + id);
+				$('#f_approve #description').val($('#motivo').val());
+				$('#f_approve').submit();
+			});
+			
+			$( "#sel_date_ini" ).datepicker({
+				dateFormat: "dd/mm/yy"
+				
+			}).change(function(){
+				$('#filter_schedule').submit();
+			});			
+		</script>
+	</tbody>
+</table>

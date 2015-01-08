@@ -1,0 +1,2 @@
+module ScheduleApproveHelper
+end

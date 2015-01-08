@@ -1,0 +1,284 @@
+	<style>
+		.lnk_add{
+			margin-left: 30px;
+		}
+		.btn_add{
+			width: 15px;
+		}
+	</style>
+	<script>
+		$(document).ready(function(){
+			$('.fnc_add').click(function(){
+				var tipo = $('#evento').val();
+				var evento;
+				
+				var v = $('#veiculo :selected').text();
+				var a = $('#aluno :selected').text();
+				var cnt = $(this).parents('.panel')
+						.find('.panel-body');				
+
+				if(tipo == 0){//aula
+					var i = $('#instrutor :selected').text();
+					evento = '<p><small>' + v + ' - ' + a + ' - <br />INSTRUTOR: ' + i + '</small></p> <hr />';
+				}else if(tipo == 1){//exame
+					evento = '<p><small>' + v + ' - EXAME</small></p> <hr />';
+				}else if(tipo == 2){//intervalo
+					evento = '<p><small>' + v + ' - INTERVALO</small></p> <hr />';
+				}else if(tipo == 3){//outro
+					var d = $('#evento_desc').val();
+					evento = '<p><small>' + v + ' - ' + d + '</small></p> <hr />';
+				}
+				
+				
+				$("#schedule_event").val(evento);
+				$("#schedule_date").val($(this).attr("data-date"));
+				$("#schedule_time").val($(this).attr("data-time"));
+				$("#schedule_vehicle_id").val($('#veiculo :selected').val());
+				$("#schedule_instructor_id").val($('#instrutor :selected').val());
+				$("#schedule_customer_id").val($('#aluno :selected').val());
+				
+				$.ajax({
+					type: "POST",
+					dataType: "JSON",
+					url: $(".new_schedule").attr("action"),
+					data: $(".new_schedule").serialize()
+					
+				}).done(function() {
+					id_field =  $("#schedule_date").val() + "-" + $("#schedule_time").val().replace(":", "_") + "-" + $("#schedule_vehicle_id").val();
+					id_control_customer = $("#schedule_date").val() + "-c-" + $("#schedule_customer_id").val();
+					
+					temp = $("<span />").attr("id", id_field);
+					temp.append(evento).append($("<span />").addClass(id_control_customer));
+					cnt.append(temp);
+					
+					verifyButtons();
+					
+				}).error(function(x, textStatus, errorThrown){
+					alert( "Erro ao agendar: " + x.responseJSON.event);
+				});
+				
+			});
+			
+			$('.fnc_rem').click(function(){
+				
+				if(!confirm("Remover agendamento?")){
+					return;
+				}
+				
+				var v = $('#veiculo :selected').text();
+				
+				$("#_date").val($(this).attr("data-date"));
+				$("#_time").val($(this).attr("data-time"));
+				$("#_vehicle_id").val($('#veiculo :selected').val());
+				
+				$.ajax({
+					type: "GET",
+					dataType: "JSON",
+					url: $("#destroy_schedule").attr("action"),
+					data: $("#destroy_schedule").serialize()
+					
+				}).done(function(){
+					id_field =  $("#_date").val() + "-" + $("#_time").val().replace(":", "_") + "-" + $("#_vehicle_id").val();
+					$('#' + id_field).remove();
+					resetButtons();
+					verifyButtons();
+					
+				}).fail(function(){
+					alert( "Erro ao remover agendamento." );
+				});
+				
+			});
+			
+			//reload
+			function reload(){
+				<% @schedules.each do |s| %>
+					<% 
+						id_field =  s.date.to_s + "-" + s.time.strftime("%H_%M")
+						id_control =  id_field + "-" + s.vehicle_id.to_s #+ s.customer_id.to_s
+						id_control_customer = s.date.to_s + "-c-" + s.customer_id.to_s
+					%>
+					temp = $('<span id="<%= id_control %>" />')
+						.append('<span class="<%= id_control_customer %>" />')
+						.append("<%= s.event.html_safe %>");
+					$('#<%= id_field %>').append(temp);
+				<% end %>
+			}
+			
+			function changeButton(){
+			
+				$(".blc_crl").each(function(){
+					id_field = $(this).attr("id");
+					id_control = id_field + "-" + $('#veiculo :selected').val();// + $('#aluno :selected').val();
+					
+					if($("#" + id_control).length){
+						lnk = $("#" + id_control).parent().parent();
+						lnk.find(".lnk_add").hide();
+						lnk.find(".lnk_rem").show();
+					}
+
+				});
+			}
+			
+			function changeButtonCustomer(){
+				$(".lnk_ok").hide();
+				
+				$(".h_crl").each(function(){
+					id_field = $(this).attr("id");
+					id_control = id_field + "-c-" + $('#aluno :selected').val();
+				
+					if($("." + id_control).length >= <%= Schedule::Max_classes_day %>){
+						$(".h_add_" + id_field).hide();
+						$(".h_ok_" + id_field).show();
+						
+					} else if($("." + id_control).length != 0){
+						p = $("." + id_control).parent().parent().parent(); 
+						p.find(".h_add_" + id_field).hide();
+						p.find(".h_ok_" + id_field).show();
+					}
+
+				});
+			}			
+			
+			function resetButtons(){
+				$(".lnk_add").show();
+				$(".lnk_rem").hide();
+				$(".lnk_ok").hide();
+			}
+			
+			function verifyButtons(){
+				changeButton();
+				changeButtonCustomer();
+			}
+			
+			$('#evento').change(function(){
+				if($('#evento').val() == 3){
+					$('#evento_desc').show();
+				}else{
+					$('#evento_desc').hide();
+				}
+			});
+			
+			$( "#sel_date_ini" ).datepicker({
+				//$.datepicker.regional[ "br" ]
+				dateFormat: "dd/mm/yy"
+				
+			}).change(function(){
+				$('#filter_schedule').submit();
+			});
+			
+			$('#veiculo').change(function(){
+				$('#instrutor').val($('#veiculo :selected').attr('data-instructor'));
+				resetButtons();
+				verifyButtons();
+			});
+			
+			$('#aluno').change(function(){
+				resetButtons();
+				verifyButtons();
+			});	
+
+			reload();			
+			verifyButtons();
+		});
+	</script>
+	<%= form_for @schedule do |f| %>
+		<%= f.hidden_field :event %>
+		<%= f.hidden_field :date %>
+		<%= f.hidden_field :time %>
+		<%= f.hidden_field :vehicle_id %>
+		<%= f.hidden_field :instructor_id %>
+		<%= f.hidden_field :customer_id %>
+	<% end %>
+	
+	<%= form_tag schedule_remove_remove_path, :html => {:method => 'delete', :remote => true}, :id => 'destroy_schedule' do |f| %>
+		<%= hidden_field_tag :date, 0, :id => "_date"  %>
+		<%= hidden_field_tag :time, 0, :id => "_time" %>
+		<%= hidden_field_tag :vehicle_id, 0, :id => "_vehicle_id" %>
+	<% end %>	
+	
+	<!-- <div class="page-header">
+		<h1>Agendamento</h1>
+	</div> -->
+	<div class="_container">
+	<div class="form-horizontal">
+		
+	<%= form_tag schedules_path, :method => 'get', :id => 'filter_schedule' do |f|
+	#= form_tag rooms_path, method: :get, class: 'search' do 
+	%>
+		<p>
+			<select id="veiculo" class="input-xlarge upper">
+			<% @vehicles.each do |vehicle| %>
+				<option value="<%= vehicle.id %>" 
+					data-instructor="<%= vehicle.instructor.id if vehicle.instructor.present? %>"><%= vehicle.name %></option>
+			<% end %>
+			</select>
+			
+			<select id="aluno" class="upper">
+			<% @customers.each do |custumer| %>
+				<option value="<%= custumer.id %>"><%= custumer.name %></option>
+			<% end %>
+			</select>		
+			<span>Mostrar semana:</span>
+			<%= text_field_tag :date_init, I18n.l(@schedule.date_init), :id => 'sel_date_ini', :class => 'input-small'  %>
+		</p>
+		<p>Instrutor padrão: <span id="insp"></span> 		
+			<select id="instrutor" class="upper">
+				<% @instructors.each do |instructor| %>
+				<option value="<%= instructor.id %>"><%= instructor.name %></option>
+				<% end %>
+			</select>	
+			 | <span> Evento</span>
+			<select id="evento" class="upper">
+				<option value="0">Aula</option>
+				<option value="1">Exame</option>
+				<option value="2">Intervalo</option>
+				<option value="3">Outro</option>
+			</select>
+			<input id="evento_desc" type="text" value="" style="display:none;" />			
+		</p>
+	<% end %>
+			
+		<!-- <h2>Horários</h2> -->
+		<hr />
+		<div>
+			<div class="row">		
+<%
+	col = 0
+	(@schedule.date_init..@schedule.date_end).map{ |d|
+		next if d.sunday?
+%>
+				<div id="<%= d.to_s %>" class="col-sm-2 h_crl" style='<%= "background-color: darkkhaki;" if d.sunday? %>'><%= I18n.l d, :format => :short_custom %>
+<%
+		@schedule.times.each{ |t| 
+%>					
+					<div class="panel <%= col.even? ? 'panel-default' : 'panel-info' %>">
+						<div class="panel-heading">
+							<h3 class="panel-title">
+								<span class="hora"><%= t %></span>
+								
+								<span class=""><a href="javascript:void()" title="Adicionar à <%= I18n.l d, :format => :short %>" class="fnc_add h_add_<%= d.to_s %> lnk_add" data-date="<%= d %>" data-time="<%= t %>">
+									<img class="btn_add" src="assets/add.png" /></a></span>
+									
+								<span class="lnk_rem" style="display:none;"><a href="javascript:void()" title="Remover de <%= I18n.l d, :format => :short %>" class="fnc_rem" data-date="<%= d %>" data-time="<%= t %>">
+									<img class="btn_add" src="assets/rem.png" /></a></span>
+									
+								<span class="lnk_ok h_ok_<%= d.to_s %>" style="display:none;">
+									<img class="btn_add" src="assets/ok.png" title="Aluno adicionado ou número máximo de aulas diárias atingidos." /></a></span>																		
+							</h3>
+						</div>
+						<div id="<%= d %>-<%= t.gsub(/:/, '_') %>" class="blc_crl panel-body">
+							<!-- content -->
+						</div>
+					</div>
+<%
+		}
+%>
+				</div>
+<%
+		col = col + 1
+	}
+%>
+			</div>
+		</div>
+	</div>
+	</div>

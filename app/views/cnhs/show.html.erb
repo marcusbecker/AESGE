@@ -1,0 +1,31 @@
+<p id="notice"><%= notice %></p>
+
+<% if @cnh.photo.present? %>
+	<img src="/uploads/<%= @cnh.photo.path %>" />
+<% end %>	
+<p>
+  <strong>Customer:</strong>
+  <%= @cnh.customer.name %>
+</p>
+<p>
+  <strong>Category:</strong>
+  <%= @cnh.category %>
+</p>
+
+<p>
+  <strong>Registration:</strong>
+  <%= @cnh.registration %>
+</p>
+
+<p>
+  <strong>First:</strong>
+  <%= @cnh.first %>
+</p>
+
+<p>
+  <strong>Validity:</strong>
+  <%= @cnh.validity %>
+</p>
+
+<%= link_to I18n.t('links.edit'), edit_customer_cnh_path(@customer, @cnh) %> |
+<%= link_to I18n.t('links.back'), customer_cnhs_path(@customer) %>

@@ -1,0 +1,44 @@
+<h1>Listando <%= I18n.t 'customer.title' %></h1>
+<table class="table">
+  <thead>
+    <tr>
+      <th><%= I18n.t 'activerecord.attributes.customer.name' %></th>
+      <th><%= I18n.t 'activerecord.attributes.customer.fname' %></th>
+      <th><%= I18n.t 'activerecord.attributes.customer.mname' %></th>
+      <th><%= I18n.t 'activerecord.attributes.customer.country' %></th>
+      <th><%= I18n.t 'activerecord.attributes.customer.city' %></th>
+      <th><%= I18n.t 'activerecord.attributes.customer.uf' %></th>
+      <th><%= I18n.t 'activerecord.attributes.customer.birth' %></th>
+      <th><%= I18n.t 'activerecord.attributes.customer.email' %></th>
+      <th><%= I18n.t 'activerecord.attributes.customer.annotation' %></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @customers.each do |customer| %>
+      <tr>
+        <td><%= customer.name %></td>
+        <td><%= customer.fname %></td>
+        <td><%= customer.mname %></td>
+        <td><%= customer.country %></td>
+        <td><%= customer.city %></td>
+        <td><%= customer.uf %></td>
+        <td><%= I18n.l customer.birth %></td>
+        <td><%= customer.email %></td>
+        <td><%= customer.annotation %></td>
+        <td><%= link_to 'CNH', customer_cnhs_path(customer) %></td>
+        <td><%= link_to I18n.t('links.show'), customer %></td>
+        <td><%= link_to I18n.t('links.edit'), edit_customer_path(customer) %></td>
+        <td><%= link_to I18n.t('links.destroy'), customer, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'Novo Aluno', new_customer_path %>

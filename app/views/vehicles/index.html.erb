@@ -1,0 +1,35 @@
+<h1>Listing vehicles</h1>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Placa</th>
+      <th>Instrutor padrão</th>
+      <th>Ordem de exibição</th>
+      <th>Ativo</th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @vehicles.each do |vehicle| %>
+      <tr>
+        <td><%= vehicle.name %></td>
+        <td><%= vehicle.vehicle_plate %></td>
+        <td><%= vehicle.instructor.name if vehicle.instructor.present? %></td>
+        <td><%= vehicle.show_order %></td>
+        <td><%= "Sim" if vehicle.active %></td>
+        <td><%= link_to 'Show', vehicle %></td>
+        <td><%= link_to 'Edit', edit_vehicle_path(vehicle) %></td>
+        <td><%= link_to 'Destroy', vehicle, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Vehicle', new_vehicle_path %>

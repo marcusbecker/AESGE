@@ -1,0 +1,436 @@
+<style>
+	.row {
+		margin-top: 20px;
+	}
+</style>
+<script>
+	$(document).ready(function() {
+		$("#customer_cpf").mask("999.999.999.99");
+		$("#customer_rg").mask("99.999.999-*");
+		$("#customer_uf").mask("aa");
+
+		$("#address_zip_code").mask("99999-999");
+
+		$('#myTab a').click(function(e) {
+			e.preventDefault()
+			$(this).tab('show')
+		});
+
+		$('#btn_save').click(function() {
+			var id = null;
+			//save customer
+			$.ajax({
+				type : "POST",
+				dataType : "JSON",
+				async : false,
+				url : $('#new_customer').attr("action"),
+				data : $('#new_customer').serialize()
+			}).done(function(data) {
+				id = data.id;
+			}).fail(function(data) {
+				alert("Erro: Campos não preenchidos corretamente.");
+			});
+
+			if (id != null) {
+				var success = true;
+				//save address
+				url = $("#address_id").val() == '' ? '/customer_addresses/create/' + id : '/customer_addresses/update/' + id + '/address/' + $("#address_id").val();
+				$.ajax({
+					type : "GET",
+					dataType : "JSON",
+					async : false,
+					url : url,
+					data : $('#edit_address').serialize()
+				}).done(function(data) {
+				}).fail(function() {
+					success = false;
+					alert("Erro ao salvar endereço.");
+				});
+
+				//save business address
+				url = $("#business_address_id").val() == '' ? '/customer_addresses/create/' + id : '/customer_addresses/update/' + id + '/address/' + $("#business_address_id").val();
+				$.ajax({
+					type : "GET",
+					dataType : "JSON",
+					async : false,
+					url : url,
+					data : $('#edit_business_address').serialize()
+				}).done(function(data) {
+				}).fail(function() {
+					success = false;					
+					alert("Erro ao salvar endereço comercial.");
+				});
+
+				//save phone
+
+				$("#edit_phone_res #customer_id").val(id);
+				if(!savePhones($("#edit_phone_res"))){
+					success = false;
+					alert("Erro ao salvar telefones.");	
+				}
+				
+				$("#edit_phone_cel #customer_id").val(id);
+				if(!savePhones($("#edit_phone_cel"))){
+					success = false;
+					alert("Erro ao salvar telefones.");	
+				}
+								
+				$("#edit_phone_rec_tel #customer_id").val(id);
+				if(!savePhones($("#edit_phone_rec_tel"))){
+					success = false;
+					alert("Erro ao salvar telefones.");	
+				}	
+				
+				$("#edit_phone_rec_cel #customer_id").val(id);
+				if(!savePhones($("#edit_phone_rec_cel"))){
+					success = false;
+					alert("Erro ao salvar telefones.");	
+				}	
+				
+				$("#edit_phone_com_tel #customer_id").val(id);
+				if(!savePhones($("#edit_phone_com_tel"))){
+					success = false;
+					alert("Erro ao salvar telefones.");	
+				}
+			}
+			
+			if(success){
+				window.location.replace("/customers/" + id);
+			}				
+
+		});
+		
+		function savePhones(_form){
+			var url = _form.attr('action');
+			var _r = false;
+			
+			if(_form.find("#phone_number").val() == "" 
+				&& _form.find("#phone_id").val() == ""){
+					
+				return true;
+			}
+			
+			$.ajax({
+				type : "POST",
+				dataType : "JSON",
+				async : false,
+				url : url,
+				data : _form.serialize()
+			}).done(function(data) {
+				_r = true;
+			}).fail(function() {
+			});
+			
+			return _r;
+		}
+	}); 
+</script>
+<ul id="myTab" class="nav nav-tabs">
+	<li class="active">
+		<a href="#tab_customer">Dados Aluno</a>
+	</li>
+	<li>
+		<a href="#tab_address">Endereço</a>
+	</li>
+	<li>
+		<a href="#tab_business_address">Endereço Comercial</a>
+	</li>
+	<li>
+		<a href="#tab_cellphone">Telefones</a>
+	</li>
+</ul>
+<div class="tab-content">
+	<div class="tab-pane active" id="tab_customer">
+		<%= form_for(@customer, :html=>{id: 'new_customer'}) do |f| %>
+		<% if @customer.errors.any? %>
+		<div id="error_explanation">
+			<h2><%= pluralize(@customer.errors.count, "error") %> prohibited this customer from being saved:</h2>
+			<ul>
+				<% @customer.errors.full_messages.each do |msg| %>
+				<li>
+					<%= msg %>
+				</li>
+				<% end %>
+			</ul>
+		</div>
+		<% end %>
+		<div class="row">
+			<div class="col-md-6">
+				<div class="field">
+					<%= f.label :name %>
+					<br>
+					<%= f.text_field :name %>
+				</div>
+				<div class="field">
+					<%= f.label :fname %>
+					<br>
+					<%= f.text_field :fname %>
+				</div>
+				<div class="field">
+					<%= f.label :mname %>
+					<br>
+					<%= f.text_field :mname %>
+				</div>
+				<div class="field">
+					<%= f.label :country %>
+					<br>
+					<%= f.text_field :country %>
+				</div>
+				<div class="field">
+					<%= f.label :city %>
+					<br>
+					<%= f.text_field :city %>
+				</div>
+				<div class="field">
+					<%= f.label :uf %>
+					<br>
+					<%= f.text_field :uf %>
+				</div>
+				<div class="field">
+					<%= f.label :birth %>
+					<br>
+					<%= f.date_select(:birth, :start_year => Time.new.year - 80, :end_year => Time.new.year - 17) %>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="field">
+					<%= f.label :email %>
+					<br>
+					<%= f.text_field :email %>
+				</div>
+				<div class="field">
+					<%= f.label :schooling %>
+					<br>
+					<%= f.text_field :schooling %>
+				</div>
+				<div class="field">
+					<%= f.label :civil_status %>
+					<br>
+					<%= f.text_field :civil_status %>
+				</div>
+				<div class="field">
+					<%= f.label :cpf %>
+					<br>
+					<%= f.text_field :cpf %>
+				</div>
+				<div class="field">
+					<%= f.label :rg %>
+					<br>
+					<%= f.text_field :rg %>
+				</div>
+				<div class="field">
+					<%= f.label :annotation %>
+					<br>
+					<%= f.text_area :annotation %>
+				</div>
+			</div>
+		</div>
+		<% end %>
+	</div><!-- // tab_customer -->
+	<div class="tab-pane" id="tab_address">
+
+		<div class="row">
+			<%= form_for(@address, :html=>{id: 'edit_address'}) do |fa| %>
+			<div class="col-md-6">
+				<div class="field">
+					<%= fa.label :zip_code %>
+					<br>
+					<%= fa.text_field :zip_code %>
+				</div>
+				<div class="field">
+					<%= fa.label :type_address %>
+					<br>
+					<%= fa.select(:type_address, options_for_select(['Apartamento', 'Casa', 'Outro'])) %>
+				</div>
+				<div class="field">
+					<%= fa.label :address %>
+					<br>
+					<%= fa.text_field :address %>
+				</div>
+				<div class="field">
+					<%= fa.label :number %>
+					<br>
+					<%= fa.text_field :number %>
+				</div>
+				<div class="field">
+					<%= fa.label :complement %>
+					<br>
+					<%= fa.text_field :complement %>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="field">
+					<%= fa.label :neighborhood %>
+					<br>
+					<%= fa.text_field :neighborhood %>
+				</div>
+				<div class="field">
+					<%= fa.label :city %>
+					<br>
+					<%= fa.text_field :city %>
+				</div>
+				<div class="field">
+					<%= fa.label :state %>
+					<br>
+					<%= fa.text_field :state %>
+				</div>
+				<div class="field">
+					<%= fa.label :note %>
+					<br>
+					<%= fa.text_area :note %>
+				</div>
+				<%= fa.hidden_field :id %>
+				<%= hidden_field_tag :commercial, false %>
+			</div>
+			<% end %>
+		</div>
+	</div><!-- tab_business_address -->
+	<div class="tab-pane" id="tab_business_address">
+
+		<div class="row">
+			<%= form_for(@address_business, :html=>{id: 'edit_business_address'}) do |fa| %>
+			<div class="col-md-6">
+				<div class="field">
+					<%= fa.label :zip_code %>
+					<br>
+					<%= fa.text_field :zip_code %>
+				</div>
+				<div class="field">
+					<%= fa.label :type_address %>
+					<br>
+					<%= fa.select(:type_address, options_for_select(['Apartamento', 'Comercial', 'Outro'])) %>
+				</div>
+				<div class="field">
+					<%= fa.label :address %>
+					<br>
+					<%= fa.text_field :address %>
+				</div>
+				<div class="field">
+					<%= fa.label :number %>
+					<br>
+					<%= fa.text_field :number %>
+				</div>
+				<div class="field">
+					<%= fa.label :complement %>
+					<br>
+					<%= fa.text_field :complement %>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="field">
+					<%= fa.label :neighborhood %>
+					<br>
+					<%= fa.text_field :neighborhood %>
+				</div>
+				<div class="field">
+					<%= fa.label :city %>
+					<br>
+					<%= fa.text_field :city %>
+				</div>
+				<div class="field">
+					<%= fa.label :state %>
+					<br>
+					<%= fa.text_field :state %>
+				</div>
+				<div class="field">
+					<%= fa.label :note %>
+					<br>
+					<%= fa.text_area :note %>
+				</div>
+				<%= fa.hidden_field(:id, :id => 'business_address_id') %>
+				<%= hidden_field_tag :commercial, true %>
+			</div>
+			<% end %>
+		</div>
+	</div><!-- tab_address -->
+	<div class="tab-pane" id="tab_cellphone">
+		<div class="row">
+			<%= form_for([@customer, @phoneRes], :html=>{id: 'edit_phone_res'}) do |fa| %>
+			<div class="">
+				<div class="field">
+					<div class="field">
+						<%= fa.label I18n.t :phone_code %> <%= fa.text_field :code %>
+						<%= I18n.t :tel_res %> <%= fa.text_field :number %>
+						<%= fa.label I18n.t :phone_description %> <%= fa.text_field :description %>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-6"></div>
+
+			<%= hidden_field_tag :customer_id, @customer.id %>
+			<%= fa.hidden_field :id %>
+			<% end %>
+		</div>
+		<div class="row">
+			<%= form_for([@customer, @phoneCel], :html=>{id: 'edit_phone_cel'}) do |fa| %>
+			<div class="">
+				<div class="field">
+					<div class="field">
+						<%= fa.label I18n.t :phone_code %> <%= fa.text_field :code %>
+						<%= I18n.t :cel_res %> <%= fa.text_field :number %>
+						<%= fa.label I18n.t :phone_description %> <%= fa.text_field :description %>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-6"></div>
+
+			<%= hidden_field_tag :customer_id, @customer.id %>
+			<%= fa.hidden_field :id %>
+			<% end %>
+		</div>
+		<div class="row">
+			<%= form_for([@customer, @phoneRec], :html=>{id: 'edit_phone_rec_tel'}) do |fa| %>
+			<div class="">
+				<div class="field">
+					<div class="field">
+						<%= fa.label I18n.t :phone_code %> <%= fa.text_field :code %>
+						<%= I18n.t :tel_rec %> <%= fa.text_field :number %>
+						<%= fa.label I18n.t :phone_description %> <%= fa.text_field :description %>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-6"></div>
+
+			<%= hidden_field_tag :customer_id, @customer.id %>
+			<%= fa.hidden_field :id %>
+			<% end %>
+		</div>
+		<div class="row">
+			<%= form_for([@customer, @phoneRecCel], :html=>{id: 'edit_phone_rec_cel'}) do |fa| %>
+			<div class="">
+				<div class="field">
+					<div class="field">
+						<%= fa.label I18n.t :phone_code %> <%= fa.text_field :code %>
+						<%= I18n.t :cel_rec %> <%= fa.text_field :number %>
+						<%= fa.label I18n.t :phone_description %> <%= fa.text_field :description %>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-6"></div>
+
+			<%= hidden_field_tag :customer_id, @customer.id %>
+			<%= fa.hidden_field :id %>
+			<% end %>
+		</div>		
+		<div class="row">
+			<%= form_for([@customer, @phoneCom], :html=>{id: 'edit_phone_com_tel'}) do |fa| %>
+			<div class="">
+				<div class="field">
+					<div class="field">
+						<%= fa.label I18n.t :phone_code %> <%= fa.text_field :code %>
+						<%= I18n.t :tel_com %> <%= fa.text_field :number %>
+						<%= fa.label I18n.t :phone_description %> <%= fa.text_field :description %>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-6"></div>
+
+			<%= hidden_field_tag :customer_id, @customer.id %>
+			<%= fa.hidden_field :id %>
+			<% end %>
+		</div>
+	</div><!-- tab_tel -->
+	<button id="btn_save">
+		Salvar
+	</button>
+</div>
